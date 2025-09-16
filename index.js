@@ -5,6 +5,8 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 
+const routes = require('./routes'); // ← নতুন ফাইল থেকে লিস্ট import
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -25,18 +27,10 @@ mongoose.connect(process.env.MONGO_URI, {
   process.exit(1);
 });
 
-// ✅ Routes
-const { router: authRoutes } = require('./routes/auth'); // ← ফিক্স করা
-const transactionRoutes = require('./routes/transaction');
-const balanceRoutes = require('./routes/balance');
-const userRoutes = require('./routes/user');
-const otpRoutes = require('./routes/otp');
-
-app.use('/auth', authRoutes);
-app.use('/user', userRoutes);
-app.use('/transaction', transactionRoutes);
-app.use('/balance', balanceRoutes);
-app.use('/otp', otpRoutes);
+// ✅ Attach routes from the list
+routes.forEach(route => {
+  app.use(route.path, route.handler);
+});
 
 // ✅ Root route
 app.get('/', (req, res) => {
