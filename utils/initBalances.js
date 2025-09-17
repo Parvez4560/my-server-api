@@ -1,24 +1,43 @@
-// accountType অনুযায়ী initial balances setup
-function initBalances(accountType) {
-  const balances = [];
+const DEFAULT_BALANCES = {
+  Personal: [
+    { type: 'salafi', subTypes: ['main'] },
+    { type: 'my_savings' }, // শুধুমাত্র হিসাব রাখার জন্য
+    { type: 'my_loan' }     // শুধুমাত্র হিসাব রাখার জন্য
+  ],
+  Agent: [
+    { type: 'salafi', subTypes: ['main'] }
+  ],
+  Merchant: [
+    { type: 'salafi', subTypes: ['main'] },
+    { type: 'bank', subTypes: ['main'] },
+    { type: 'fms', subTypes: ['bKash', 'NAGAD', 'Rocket', 'Upay', 'Tap'] }
+  ]
+};
 
-  if (accountType === 'Personal') {
-    balances.push({ type: 'main', amount: 0 });
-    balances.push({ type: 'mobile_banking', amount: 0 });
-  }
+function initBalances(accountType, existingBalances = []) {
+  const defaultBalances = DEFAULT_BALANCES[accountType] || [];
+  const balances = [...existingBalances];
 
-  if (accountType === 'Agent') {
-    balances.push({ type: 'main', amount: 0 });
-  }
-
-  if (accountType === 'Merchant') {
-    const merchantBalanceTypes = [
-      'main', 'pgo_income', 'donation_income', 'sales_income', 'cashback_income'
-    ];
-    merchantBalanceTypes.forEach(type => balances.push({ type, amount: 0 }));
-  }
+  defaultBalances.forEach(def => {
+    // যদি একই টাইপ আগেই না থাকে
+    if (!balances.some(b => b.type === def.type)) {
+      if (def.subTypes && def.subTypes.length) {
+        // প্রতিটি subType আলাদা balance এ add করা
+        def.subTypes.forEach(st => balances.push({ type: def.type, subType: st, amount: 0 }));
+      } else {
+        balances.push({ type: def.type, amount: 0 });
+      }
+    }
+  });
 
   return balances;
 }
 
-module.exports = initBalances;
+// মোট ব্যালেন্স গণনা (শুধুমাত্র Salafi + Bank + FMS)
+function getTotalBalance(balances) {
+  return balances
+    .filter(b => ['salafi', 'bank', 'fms'].includes(b.type))
+    .reduce((sum, b) => sum + (b.amount || 0), 0);
+}
+
+module.exports = { initBalances, getTotalBalance, DEFAULT_BALANCES };
