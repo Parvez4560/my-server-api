@@ -1,18 +1,20 @@
 const User = require('../models/User');
+const { ensureBalanceExists } = require('../utils/initBalances');
 const calculateTotalBalance = require('../utils/calculateTotalBalance');
 
-// GET total balance (only Salafi + Bank + FMS)
+// GET total balance (Currency filter optional)
 const getTotalBalance = async (req, res) => {
   try {
     const { phoneNumber } = req.params;
+    const { currency } = req.query;
     const user = await User.findOne({ phoneNumber });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const visibleBalances = user.balances.filter(b =>
-      ['salafi', 'bank', 'fms'].includes(b.type)
+      ['salafi', 'bank', 'fms'].includes(b.type) && (!currency || b.currency === currency)
     );
 
-    const total = calculateTotalBalance(visibleBalances);
+    const total = calculateTotalBalance(visibleBalances, currency);
     res.json({ total, balances: visibleBalances });
   } catch (error) {
     console.error('Get Total Balance Error:', error);
@@ -20,43 +22,38 @@ const getTotalBalance = async (req, res) => {
   }
 };
 
-// POST add balance to user
+// POST add balance
 const addBalance = async (req, res) => {
   try {
     const { phoneNumber } = req.params;
-    const { type, subType, amount } = req.body;
+    const { type, subType, currency, amount } = req.body;
 
-    if (!type || (['salafi','bank','fms'].includes(type) && !subType) || !amount) {
-      return res.status(400).json({ error: 'Type, subType and amount are required' });
+    if (!type || !subType || !currency || !amount) {
+      return res.status(400).json({ error: 'Type, subType, currency, and amount are required' });
     }
 
     const user = await User.findOne({ phoneNumber });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const balanceIndex = user.balances.findIndex(
-      b => b.type === type && (b.subType || null) === (subType || null)
-    );
+    const balance = ensureBalanceExists(user, type, subType, currency);
+    balance.amount += amount;
 
-    if (balanceIndex === -1) return res.status(400).json({ error: 'Balance type/subType not found' });
-
-    user.balances[balanceIndex].amount += amount;
     await user.save();
-
-    res.json({ message: 'Balance added successfully', balance: user.balances[balanceIndex] });
+    res.json({ message: 'Balance added successfully', balance });
   } catch (error) {
     console.error('Add Balance Error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-// POST deduct balance (only Salafi + Bank + FMS)
+// POST deduct balance
 const deductBalance = async (req, res) => {
   try {
     const { phoneNumber } = req.params;
-    const { type, subType, amount } = req.body;
+    const { type, subType, currency, amount } = req.body;
 
-    if (!type || (['salafi','bank','fms'].includes(type) && !subType) || !amount) {
-      return res.status(400).json({ error: 'Type, subType and amount are required' });
+    if (!type || !subType || !currency || !amount) {
+      return res.status(400).json({ error: 'Type, subType, currency, and amount are required' });
     }
 
     if (['my_savings', 'my_loan'].includes(type)) {
@@ -66,20 +63,15 @@ const deductBalance = async (req, res) => {
     const user = await User.findOne({ phoneNumber });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const balanceIndex = user.balances.findIndex(
-      b => b.type === type && (b.subType || null) === (subType || null)
-    );
+    const balance = ensureBalanceExists(user, type, subType, currency);
 
-    if (balanceIndex === -1) return res.status(400).json({ error: 'Balance type/subType not found' });
-
-    if (user.balances[balanceIndex].amount < amount) {
+    if (balance.amount < amount) {
       return res.status(400).json({ error: 'Insufficient balance' });
     }
 
-    user.balances[balanceIndex].amount -= amount;
+    balance.amount -= amount;
     await user.save();
-
-    res.json({ message: 'Balance deducted successfully', balance: user.balances[balanceIndex] });
+    res.json({ message: 'Balance deducted successfully', balance });
   } catch (error) {
     console.error('Deduct Balance Error:', error);
     res.status(500).json({ error: 'Server error' });

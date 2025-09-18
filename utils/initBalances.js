@@ -1,43 +1,58 @@
 const DEFAULT_BALANCES = {
   Personal: [
-    { type: 'salafi', subTypes: ['main'] },
-    { type: 'my_savings' }, // শুধুমাত্র হিসাব রাখার জন্য
-    { type: 'my_loan' }     // শুধুমাত্র হিসাব রাখার জন্য
+    { type: 'salafi', currency: 'BDT', subTypes: ['main'] },
+    { type: 'salafi', currency: 'USD', subTypes: ['main'] },
   ],
   Agent: [
-    { type: 'salafi', subTypes: ['main'] }
+    { type: 'salafi', currency: 'BDT', subTypes: ['main'] },
   ],
   Merchant: [
-    { type: 'salafi', subTypes: ['main'] },
-    { type: 'bank', subTypes: ['main'] },
-    { type: 'fms', subTypes: ['bKash', 'NAGAD', 'Rocket', 'Upay', 'Tap'] }
+    { type: 'salafi', currency: 'BDT', subTypes: ['main'] },
+    { type: 'bank', currency: 'BDT', subTypes: ['main'] },
+    { type: 'fms', currency: 'BDT', subTypes: ['bKash','Rocket','Nagad','Upay','Tap'] },
+    { type: 'salafi', currency: 'USD', subTypes: ['main'] },
+    { type: 'bank', currency: 'USD', subTypes: ['main'] },
+    { type: 'fms', currency: 'USD', subTypes: ['bKash','Rocket'] },
   ]
 };
 
+/**
+ * নতুন গ্রাহকের জন্য ডিফল্ট ব্যালেন্স তৈরি
+ */
 function initBalances(accountType, existingBalances = []) {
-  const defaultBalances = DEFAULT_BALANCES[accountType] || [];
   const balances = [...existingBalances];
+  const defaults = DEFAULT_BALANCES[accountType] || [];
 
-  defaultBalances.forEach(def => {
-    // যদি একই টাইপ আগেই না থাকে
-    if (!balances.some(b => b.type === def.type)) {
-      if (def.subTypes && def.subTypes.length) {
-        // প্রতিটি subType আলাদা balance এ add করা
-        def.subTypes.forEach(st => balances.push({ type: def.type, subType: st, amount: 0 }));
-      } else {
-        balances.push({ type: def.type, amount: 0 });
+  defaults.forEach(def => {
+    def.subTypes.forEach(sub => {
+      // আগেই আছে কি না চেক
+      if (!balances.some(b => b.type === def.type && b.subType === sub && b.currency === def.currency)) {
+        balances.push({
+          type: def.type,
+          subType: sub,
+          currency: def.currency,
+          amount: 0
+        });
       }
-    }
+    });
   });
 
   return balances;
 }
 
-// মোট ব্যালেন্স গণনা (শুধুমাত্র Salafi + Bank + FMS)
-function getTotalBalance(balances) {
-  return balances
-    .filter(b => ['salafi', 'bank', 'fms'].includes(b.type))
-    .reduce((sum, b) => sum + (b.amount || 0), 0);
+/**
+ * ট্রানজেকশন বা নতুন কারেন্সি/সাব-টাইপ যোগ করার সময় ব্যালেন্স চেক
+ */
+function ensureBalanceExists(user, type, subType, currency) {
+  let existing = user.balances.find(
+    b => b.type === type && b.subType === subType && b.currency === currency
+  );
+  if (!existing) {
+    const newBalance = { type, subType, currency, amount: 0 };
+    user.balances.push(newBalance);
+    return newBalance;
+  }
+  return existing;
 }
 
-module.exports = { initBalances, getTotalBalance, DEFAULT_BALANCES };
+module.exports = { initBalances, ensureBalanceExists };
