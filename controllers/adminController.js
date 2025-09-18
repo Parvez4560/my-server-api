@@ -1,9 +1,9 @@
-import Admin from "../models/Admin.js";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+const Admin = require('../models/Admin');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-// ✅ Admin Login
-export const adminLogin = async (req, res) => {
+// Admin Login
+const adminLogin = async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -36,8 +36,8 @@ export const adminLogin = async (req, res) => {
   }
 };
 
-// ✅ Get All Admins
-export const getAdmins = async (req, res) => {
+// Get All Admins
+const getAdmins = async (req, res) => {
   try {
     const admins = await Admin.find().select("-password");
     res.json(admins);
@@ -46,8 +46,8 @@ export const getAdmins = async (req, res) => {
   }
 };
 
-// ✅ Create Admin (Optional, for future use)
-export const createAdmin = async (req, res) => {
+// Create Admin (Optional)
+const createAdmin = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
@@ -69,3 +69,5 @@ export const createAdmin = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+module.exports = { adminLogin, getAdmins, createAdmin };

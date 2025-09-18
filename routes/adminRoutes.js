@@ -1,16 +1,16 @@
-import express from "express";
-import { adminLogin, getAdmins, createAdmin } from "../controllers/adminController.js";
-import { verifyAdmin } from "../middlewares/adminAuth.js"; // আলাদা Admin middleware
+const express = require('express');
+const { adminLogin, getAdmins, createAdmin } = require('../controllers/adminController');
+const verifyAdmin = require('../middlewares/adminAuth');
 
 const router = express.Router();
 
-// ✅ Login Route (সাধারণ টোকেনের প্রয়োজন নেই)
+// Login route (no token required)
 router.post("/login", adminLogin);
 
-// ✅ Get All Admins (protected, শুধুমাত্র অ্যাডমিনের জন্য)
+// Get all admins (protected)
 router.get("/", verifyAdmin, getAdmins);
 
-// ✅ Create Admin (protected, শুধুমাত্র অ্যাডমিনের জন্য)
+// Create admin (protected)
 router.post("/", verifyAdmin, createAdmin);
 
-export default router;
+module.exports = router;

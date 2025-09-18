@@ -1,16 +1,14 @@
-import jwt from "jsonwebtoken";
-import Admin from "../models/Admin.js"; // Admin মডেল ব্যবহার করুন
+const jwt = require('jsonwebtoken');
+const Admin = require('../models/Admin');
 
-export const verifyAdmin = async (req, res, next) => {
+const verifyAdmin = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "Unauthorized: No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
-
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -35,3 +33,5 @@ export const verifyAdmin = async (req, res, next) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+module.exports = verifyAdmin;
