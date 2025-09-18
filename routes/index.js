@@ -3,7 +3,7 @@ const userRoutes = require('./userRoutes');
 const balanceRoutes = require('./balanceRoutes');
 const mySavingsRoutes = require('./mySavingsRoutes');
 const myLoanRoutes = require('./myLoanRoutes');
-const adminRoutes = require('./adminRoutes');
+const adminRoutes = require('./adminRoutes'); // CommonJS
 
 const routes = [
   { path: '/auth', handler: authRoutes },
@@ -11,7 +11,7 @@ const routes = [
   { path: '/balance', handler: balanceRoutes },
   { path: '/my-savings', handler: mySavingsRoutes },
   { path: '/my-loan', handler: myLoanRoutes },
-  routes.push({ path: '/admin/login', handler: adminRoutes });
+  { path: '/admin', handler: adminRoutes },
 ];
 
 module.exports = routes;
