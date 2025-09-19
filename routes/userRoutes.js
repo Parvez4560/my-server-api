@@ -8,7 +8,7 @@ router.get('/all', async (req, res) => {
     const users = await User.find({}, '-password');
     res.json(users);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching all users:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -20,38 +20,41 @@ router.get('/by-id/:id', async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching user by ID:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// ✅ Get user by Number
-router.get('/by-number/:number', async (req, res) => {
+// ✅ Get user by phone number
+router.get('/by-number/:phoneNumber', async (req, res) => {
   try {
-    const user = await User.findOne({ number: req.params.number }, '-password');
+    const user = await User.findOne({ phoneNumber: req.params.phoneNumber }, '-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching user by phone number:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // ✅ Update user balance (Add/Remove/Set)
-router.put('/update-balance/:number', async (req, res) => {
+router.put('/update-balance/:phoneNumber', async (req, res) => {
   try {
-    const { number } = req.params;
+    const { phoneNumber } = req.params;
     const { type, amount, operation } = req.body; 
-    // example body:
-    // { "type": "my_savings", "amount": 500, "operation": "set" }
-    // operation can be: "set", "increase", "decrease"
 
-    const user = await User.findOne({ number });
+    if (!type || !amount || !operation) {
+      return res.status(400).json({ message: 'Missing required fields (type, amount, operation)' });
+    }
+
+    const user = await User.findOne({ phoneNumber });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     // Find balance by type
     const balance = user.balances.find(b => b.type === type);
-    if (!balance) return res.status(400).json({ message: 'Balance type not found' });
+    if (!balance) {
+      return res.status(400).json({ message: `Balance type '${type}' not found` });
+    }
 
     if (operation === 'set') {
       balance.amount = amount;
@@ -61,7 +64,7 @@ router.put('/update-balance/:number', async (req, res) => {
       balance.amount -= amount;
       if (balance.amount < 0) balance.amount = 0; // নেগেটিভ হলে 0
     } else {
-      return res.status(400).json({ message: 'Invalid operation type' });
+      return res.status(400).json({ message: 'Invalid operation type (use: set, increase, decrease)' });
     }
 
     await user.save();
@@ -71,7 +74,7 @@ router.put('/update-balance/:number', async (req, res) => {
       balances: user.balances 
     });
   } catch (err) {
-    console.error(err);
+    console.error('Error updating balance:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });

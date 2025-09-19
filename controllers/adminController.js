@@ -1,8 +1,11 @@
 const Admin = require('../models/Admin');
+const User = require('../models/User'); // ✅ User approve জন্য
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+// ========================
 // Admin Login
+// ========================
 const adminLogin = async (req, res) => {
   const { email, password } = req.body;
 
@@ -36,7 +39,9 @@ const adminLogin = async (req, res) => {
   }
 };
 
+// ========================
 // Get All Admins
+// ========================
 const getAdmins = async (req, res) => {
   try {
     const admins = await Admin.find().select("-password");
@@ -46,7 +51,9 @@ const getAdmins = async (req, res) => {
   }
 };
 
-// Create Admin (Optional)
+// ========================
+// Create Admin
+// ========================
 const createAdmin = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
@@ -70,4 +77,40 @@ const createAdmin = async (req, res) => {
   }
 };
 
-module.exports = { adminLogin, getAdmins, createAdmin };
+// ========================
+// Approve / Reject User Account
+// ========================
+const approveUserAccount = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { status, accountType, subType, merchantSubType } = req.body;
+
+    const allowedStatus = ['active', 'deactivated', 'closed'];
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status update' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Admin confirm করার সময় accountType, subType & merchantSubType নির্ধারণ
+    if (accountType) user.accountType = accountType;
+    if (subType) user.subType = subType;
+    if (merchantSubType) user.merchantSubType = merchantSubType;
+
+    user.status = status;
+    await user.save();
+
+    res.json({ message: `User ${status} successfully`, user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+module.exports = {
+  adminLogin,
+  getAdmins,
+  createAdmin,
+  approveUserAccount, // ✅ নতুন ফাংশন
+};
