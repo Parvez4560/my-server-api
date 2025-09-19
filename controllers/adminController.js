@@ -1,5 +1,6 @@
 const Admin = require('../models/Admin');
 const User = require('../models/User'); // ✅ User approve জন্য
+const MerchantType = require('../models/MerchantType'); // ✅ নতুন
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -78,7 +79,7 @@ const createAdmin = async (req, res) => {
 };
 
 // ========================
-// Approve / Reject User Account
+// Approve / Reject User Account (UserId-based)
 // ========================
 const approveUserAccount = async (req, res) => {
   try {
@@ -93,7 +94,6 @@ const approveUserAccount = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Admin confirm করার সময় accountType, subType & merchantSubType নির্ধারণ
     if (accountType) user.accountType = accountType;
     if (subType) user.subType = subType;
     if (merchantSubType) user.merchantSubType = merchantSubType;
@@ -108,9 +108,37 @@ const approveUserAccount = async (req, res) => {
   }
 };
 
+// ========================
+// Approve Merchant by Phone (New)
+// ========================
+const approveMerchantByPhone = async (req, res) => {
+  try {
+    const { phoneNumber, merchantTypeId } = req.body;
+
+    const user = await User.findOne({ phoneNumber });
+    if (!user) return res.status(404).json({ error: "User not found" });
+    if (user.accountType !== "Merchant") {
+      return res.status(400).json({ error: "Not a merchant account" });
+    }
+
+    const mType = await MerchantType.findById(merchantTypeId);
+    if (!mType) return res.status(404).json({ error: "Merchant type not found" });
+
+    user.merchantSubType = mType._id;
+    user.status = "active"; // Approve করলে active হবে
+    await user.save();
+
+    res.json({ message: "Merchant approved successfully", user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to approve merchant" });
+  }
+};
+
 module.exports = {
   adminLogin,
   getAdmins,
   createAdmin,
-  approveUserAccount, // ✅ নতুন ফাংশন
+  approveUserAccount,       // UserId-based (পুরানো)
+  approveMerchantByPhone,   // ফোন নাম্বার-based (নতুন)
 };

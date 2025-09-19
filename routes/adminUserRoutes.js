@@ -1,15 +1,14 @@
-// routes/adminUserRoutes.js
 const express = require('express');
 const User = require('../models/User');
 const MerchantType = require('../models/MerchantType');
 const router = express.Router();
 
-// মার্চেন্ট approve করে সাবটাইপ অ্যাসাইন
-router.post('/approve-merchant/:userId', async (req, res) => {
+// মার্চেন্ট approve করে সাবটাইপ অ্যাসাইন ফোন নাম্বার দিয়ে
+router.post('/approve-merchant', async (req, res) => {
   try {
-    const { merchantTypeId } = req.body; // Admin প্যানেল থেকে আসবে
-    const user = await User.findById(req.params.userId);
+    const { phoneNumber, merchantTypeId } = req.body; // ফোন নাম্বার থেকে ইউজার খুঁজবে
 
+    const user = await User.findOne({ phoneNumber });
     if (!user) return res.status(404).json({ error: "User not found" });
     if (user.accountType !== "Merchant") {
       return res.status(400).json({ error: "Not a merchant account" });

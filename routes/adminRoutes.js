@@ -3,7 +3,7 @@ const {
   adminLogin, 
   getAdmins, 
   createAdmin, 
-  approveUserAccount // ✅ নতুন ফাংশন
+  approveMerchantByPhone // ✅ নতুন ফাংশন ফোন দিয়ে
 } = require('../controllers/adminController');
 const verifyAdmin = require('../middlewares/adminAuth');
 
@@ -18,8 +18,8 @@ router.get('/', verifyAdmin, getAdmins);
 // ➕ Create new admin
 router.post('/', verifyAdmin, createAdmin);
 
-// ✅ Approve/Reject user account
-// Body: { status: "active" | "deactivated" | "closed" }
-router.put('/approve-user/:userId', verifyAdmin, approveUserAccount);
+// ✅ Approve Merchant by Phone
+// Body: { phoneNumber: "017XXXXXXXX", merchantTypeId: "<ObjectId>" }
+router.post('/approve-merchant', verifyAdmin, approveMerchantByPhone);
 
 module.exports = router;

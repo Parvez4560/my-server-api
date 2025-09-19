@@ -3,6 +3,9 @@ const User = require('../models/User');
 const initBalances = require('../utils/initBalances');
 const validateDocuments = require('../utils/validateDocuments');
 
+// ========================
+// User Registration
+// ========================
 const registerUser = async (req, res) => {
   try {
     const { phoneNumber, password, accountType, subType, merchantSubType, documents } = req.body;
@@ -47,4 +50,41 @@ const registerUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser };
+// ========================
+// Check Account by Phone Number
+// ========================
+const checkAccount = async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+
+    const user = await User.findOne({ phoneNumber });
+
+    if (!user) {
+      return res.status(404).json({ 
+        exists: false, 
+        message: 'Account not found' 
+      });
+    }
+
+    res.json({
+      exists: true,
+      account: {
+        phoneNumber: user.phoneNumber,
+        accountType: user.accountType,       // Personal / Agent / Merchant
+        subType: user.subType || null,       // Sub-type if assigned
+        merchantSubType: user.merchantSubType || null, // Merchant type if any
+        status: user.status === 'active' ? 'Active' : 'Inactive' // Active/Inactive
+      }
+    });
+
+  } catch (error) {
+    console.error('Check Account Error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+module.exports = { registerUser, checkAccount };
