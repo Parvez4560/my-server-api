@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 
 const routes = require('./routes'); // routes/index.js import
+const seedSubTypes = require('./seeders/subTypesSeeder'); // ডিফল্ট সাবটাইপ সিডার
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -21,7 +22,22 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('✅ MongoDB connected successfully'))
+.then(async () => {
+  console.log('✅ MongoDB connected successfully');
+
+  // ✅ ডিফল্ট সাবটাইপস সিড
+  try {
+    await seedSubTypes();
+    console.log('✅ Default sub-types seeded successfully');
+  } catch (err) {
+    console.error('❌ Seeding sub-types failed:', err.message);
+  }
+
+  // ✅ Start server only after DB connection & seeding
+  app.listen(port, () => {
+    console.log(`✅ Server running at http://localhost:${port}`);
+  });
+})
 .catch(err => {
   console.error('❌ MongoDB connection error:', err.message);
   process.exit(1);
@@ -46,9 +62,4 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ Global Error:', err.stack || err);
   res.status(500).json({ message: 'Internal server error' });
-});
-
-// ✅ Start server
-app.listen(port, () => {
-  console.log(`✅ Server running at http://localhost:${port}`);
 });
