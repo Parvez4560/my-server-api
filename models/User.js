@@ -4,10 +4,21 @@ const documentSchema = require('./schemas/documentSchema');
 const balanceSchema = require('./schemas/balanceSchema');
 const { initBalances } = require('../utils/initBalances');
 
+// ----------------- Helper: Temp Password Expiry -----------------
+const addHours = (date, hours) => {
+  const newDate = new Date(date);
+  newDate.setHours(newDate.getHours() + hours);
+  return newDate;
+};
+
 // ----------------- User Schema -----------------
 const userSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+
+  // Password Handling
+  password: { type: String, default: null },        // permanent password
+  tempPassword: { type: String, default: null },    // temporary password
+  tempPasswordExpiry: { type: Date, default: null },// expiry date-time
 
   // Main account type
   accountType: { 
@@ -51,7 +62,7 @@ userSchema.pre('validate', function(next) {
   switch (this.accountType) {
     case 'Personal':
       if (!this.personalSubType) {
-        this.status = 'deactivated'; // auto deactivate
+        this.status = 'deactivated';
         return next(new Error('Personal account must have a personalSubType.'));
       }
       this.agentSubType = null;
@@ -60,7 +71,7 @@ userSchema.pre('validate', function(next) {
 
     case 'Agent':
       if (!this.agentSubType) {
-        this.status = 'deactivated'; // auto deactivate
+        this.status = 'deactivated';
         return next(new Error('Agent account must have an agentSubType.'));
       }
       this.personalSubType = null;
@@ -69,7 +80,7 @@ userSchema.pre('validate', function(next) {
 
     case 'Merchant':
       if (!this.merchantSubType) {
-        this.status = 'deactivated'; // auto deactivate
+        this.status = 'deactivated';
         return next(new Error('Merchant account must have a merchantSubType.'));
       }
       this.personalSubType = null;
@@ -77,7 +88,7 @@ userSchema.pre('validate', function(next) {
       break;
 
     default:
-      this.status = 'deactivated'; // invalid type
+      this.status = 'deactivated';
       return next(new Error('Invalid accountType.'));
   }
 
@@ -89,6 +100,14 @@ userSchema.pre('save', function (next) {
   if (this.isNew || (this.balances && this.balances.length > 0)) {
     this.balances = initBalances(this.accountType, this.balances);
   }
+
+  // যদি permanent password না থাকে তাহলে temp password তৈরি হবে
+  if (this.isNew && !this.password) {
+    const randomPIN = Math.floor(1000 + Math.random() * 900000).toString(); // 4–6 digit
+    this.tempPassword = randomPIN;
+    this.tempPasswordExpiry = addHours(new Date(), 72); // 72 hours expiry
+  }
+
   next();
 });
 
