@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
-const initBalances = require('../utils/initBalances');
+const { initBalances } = require('../utils/initBalances');
 const validateDocuments = require('../utils/validateDocuments');
 
 // Generate temporary PIN
