@@ -2,7 +2,7 @@
 
 const PersonalSubType = require('../models/PersonalSubType');
 const AgentSubType = require('../models/AgentSubType');
-const MerchantType = require('../models/MerchantType');
+const MerchantType = require('../models/MerchantSubType');
 
 /**
  * Generate a unique 5-digit numeric ID

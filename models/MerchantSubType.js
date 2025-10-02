@@ -6,4 +6,4 @@ const merchantTypeSchema = new mongoose.Schema({
   status: { type: String, enum: ["active", "inactive"], default: "active" }
 }, { timestamps: true });
 
-module.exports = mongoose.model('MerchantType', merchantTypeSchema);
+module.exports = mongoose.model('MerchantSubType', merchantTypeSchema);

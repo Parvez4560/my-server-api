@@ -1,6 +1,6 @@
 const Admin = require('../models/Admin');
 const User = require('../models/User'); // ✅ User approve জন্য
-const MerchantType = require('../models/MerchantType'); // ✅ নতুন
+const MerchantType = require('../models/MerchantSubType'); // ✅ নতুন
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 

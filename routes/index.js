@@ -1,13 +1,19 @@
 const authRoutes = require('./authRoutes');  
 const userRoutes = require('./userRoutes');  
 const balanceRoutes = require('./balanceRoutes');  
-const adminRoutes = require('./adminRoutes'); // CommonJS
+const adminRoutes = require('./adminRoutes');
+const personalSubTypeRoutes = require('./personalSubTypeRoutes');
+const agentSubTypeRoutes = require('./agentSubTypeRoutes');
+const merchantSubTypeRoutes = require('./merchantSubTypeRoutes');
 
 const routes = [  
   { path: '/auth', handler: authRoutes },  
   { path: '/user', handler: userRoutes },  
   { path: '/balance', handler: balanceRoutes },  
   { path: '/admin', handler: adminRoutes },  
+  { path: '/personal-subtypes', handler: personalSubTypeRoutes },
+  { path: '/agent-subtypes', handler: agentSubTypeRoutes },
+  { path: '/merchant-subtypes', handler: merchantSubTypeRoutes },
 ];
 
 module.exports = routes;
