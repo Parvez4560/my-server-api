@@ -15,7 +15,7 @@ const generateTempPin = () => {
 // User registration
 const registerUser = async (req, res) => {
   try {
-    const { phoneNumber, password, accountType, subType, merchantSubType, documents } = req.body;
+    const { phoneNumber, password, accountType, personalSubType, agentSubType, merchantSubType, documents, faceImage, additionalInfo, otgData } = req.body;
 
     if (!phoneNumber || !accountType) {
       return res.status(400).json({ error: 'Phone number and account type are required' });
@@ -38,7 +38,7 @@ const registerUser = async (req, res) => {
     } else {
       const tempPin = generateTempPin();
       tempPasswordHash = await bcrypt.hash(tempPin, 10);
-      tempPasswordExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72h
+      tempPasswordExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000);
       console.log(`Generated Temporary PIN for ${phoneNumber}: ${tempPin}`);
     }
 
@@ -50,10 +50,14 @@ const registerUser = async (req, res) => {
       tempPassword: tempPasswordHash,
       tempPasswordExpiry,
       accountType,
-      subType: subType || null,
+      personalSubType: personalSubType || null,
+      agentSubType: agentSubType || null,
       merchantSubType: merchantSubType || null,
       documents,
       balances,
+      faceImage: faceImage || null,
+      additionalInfo: additionalInfo || {},
+      otgData: otgData || {},
     });
 
     await newUser.save();
@@ -91,7 +95,8 @@ const checkAccount = async (req, res) => {
       account: {
         phoneNumber: user.phoneNumber,
         accountType: user.accountType,
-        subType: user.subType || null,
+        personalSubType: user.personalSubType || null,
+        agentSubType: user.agentSubType || null,
         merchantSubType: user.merchantSubType || null,
         status: user.status === 'active' ? 'Active' : 'Inactive',
       },

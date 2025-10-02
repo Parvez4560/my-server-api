@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require('mongoose');
 const documentSchema = require('./schemas/documentSchema');
 const balanceSchema = require('./schemas/balanceSchema');
@@ -27,25 +26,30 @@ const userSchema = new mongoose.Schema({
     required: true 
   },
 
-  // SubTypes (অ্যাকাউন্ট টাইপ অনুযায়ী বাধ্যতামূলক)
+  // SubTypes
   personalSubType: { type: mongoose.Schema.Types.ObjectId, ref: 'PersonalSubType', default: null },
   agentSubType: { type: mongoose.Schema.Types.ObjectId, ref: 'AgentSubType', default: null },
   merchantSubType: { type: mongoose.Schema.Types.ObjectId, ref: 'MerchantType', default: null },
 
   // Merchant & Agent specific fields
-  businessName: { type: String, default: null }, // mandatory for Merchant
-  commissionRate: { type: Number, default: 0 },  // for Agent subType control
+  businessName: { type: String, default: null }, 
+  commissionRate: { type: Number, default: 0 },  
 
   // Common fields
   documents: { type: [documentSchema], default: [] },
   balances: { type: [balanceSchema], default: [] },
 
+  // Extra fields for registration (Flutter app is sending these)
+  faceImage: { type: String, default: null },
+  additionalInfo: { type: Object, default: {} },
+  otgData: { type: Object, default: {} },
+
   // Status flow
   status: {
     type: String,
     enum: [
-      'pending',         // registration request submitted
-      'active',          // after admin approves & assigns type/subType
+      'pending',
+      'active',
       'deactivated',
       'closed',
       'debit_block',
@@ -103,9 +107,9 @@ userSchema.pre('save', function (next) {
 
   // যদি permanent password না থাকে তাহলে temp password তৈরি হবে
   if (this.isNew && !this.password) {
-    const randomPIN = Math.floor(1000 + Math.random() * 900000).toString(); // 4–6 digit
+    const randomPIN = Math.floor(1000 + Math.random() * 900000).toString();
     this.tempPassword = randomPIN;
-    this.tempPasswordExpiry = addHours(new Date(), 72); // 72 hours expiry
+    this.tempPasswordExpiry = addHours(new Date(), 72); 
   }
 
   next();
