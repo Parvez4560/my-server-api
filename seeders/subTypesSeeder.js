@@ -2,7 +2,7 @@
 
 const PersonalSubType = require('../models/PersonalSubType');
 const AgentSubType = require('../models/AgentSubType');
-const MerchantType = require('../models/MerchantSubType');
+const MerchantSubType = require('../models/MerchantSubType'); // ✅ fixed
 
 /**
  * Generate a unique 5-digit numeric ID
@@ -20,7 +20,6 @@ async function generateUniqueCustomId(model) {
       customId += chars[Math.floor(Math.random() * chars.length)];
     }
 
-    // Check if this ID already exists in the collection
     const existing = await model.findOne({ customId });
     if (!existing) {
       isUnique = true;
@@ -67,8 +66,8 @@ async function seedSubTypes() {
       'Finance & Insurance'
     ];
     for (const name of merchantSubTypes) {
-      const customId = await generateUniqueCustomId(MerchantType);
-      await MerchantType.updateOne(
+      const customId = await generateUniqueCustomId(MerchantSubType);
+      await MerchantSubType.updateOne(
         { name },
         { $set: { name, status: 'active', customId } },
         { upsert: true }
