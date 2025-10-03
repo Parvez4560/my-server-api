@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
   // SubTypes
   personalSubType: { type: mongoose.Schema.Types.ObjectId, ref: 'PersonalSubType', default: null },
   agentSubType: { type: mongoose.Schema.Types.ObjectId, ref: 'AgentSubType', default: null },
-  merchantSubType: { type: mongoose.Schema.Types.ObjectId, ref: 'MerchantType', default: null },
+  merchantSubType: { type: mongoose.Schema.Types.ObjectId, ref: 'MerchantSubType', default: null },
 
   // Merchant & Agent specific fields
   businessName: { type: String, default: null }, 
