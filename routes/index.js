@@ -5,6 +5,7 @@ const adminRoutes = require('./adminRoutes');
 const personalSubTypeRoutes = require('./PersonalSubTypeRoutes');
 const agentSubTypeRoutes = require('./AgentSubTypeRoutes');
 const merchantSubTypeRoutes = require('./MerchantSubTypeRoutes');
+const uploadRoutes = require('./uploadRoutes');
 
 const routes = [  
   { path: '/auth', handler: authRoutes },  
@@ -14,6 +15,7 @@ const routes = [
   { path: '/personal-subtypes', handler: personalSubTypeRoutes },
   { path: '/agent-subtypes', handler: agentSubTypeRoutes },
   { path: '/merchant-subtypes', handler: merchantSubTypeRoutes },
+  { path: '/upload', handler: uploadRoutes },
 ];
 
 module.exports = routes;

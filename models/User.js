@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
   balances: { type: [balanceSchema], default: [] },
 
   // Extra fields for registration (Flutter app is sending these)
-  faceImage: { type: String, default: null },
+  faceImage: { type: String, default: null }, // Cloudinary URL
   additionalInfo: { type: Object, default: {} },
   otgData: { type: Object, default: {} },
 
