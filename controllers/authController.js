@@ -24,7 +24,10 @@ const generateTempPin = () => {
 // -------------------- REGISTER USER --------------------
 const registerUser = async (req, res) => {
   try {
-    const { phoneNumber, password, accountType, personalSubType, agentSubType, merchantSubType, documents, faceImage, additionalInfo, otgData } = req.body;
+    const { phoneNumber, password, accountType, personalSubType, agentSubType, merchantSubType, documents, additionalInfo, otgData } = req.body;
+
+    // Face image file coming from multer
+    const faceFile = req.file; // multer.single('faceImage') অনুযায়ী
 
     if (!phoneNumber || !accountType) {
       return res.status(400).json({ error: 'Phone number and account type are required' });
@@ -53,16 +56,29 @@ const registerUser = async (req, res) => {
       console.log(`Generated Temporary PIN for ${phoneNumber}: ${tempPin}`);
     }
 
-    // -------------------- UPLOAD FACE IMAGE --------------------
-    if (faceImage) {
+    // -------------------- UPLOAD FACE IMAGE TO CLOUDINARY --------------------
+    if (faceFile) {
       try {
-        const uploaded = await cloudinary.uploader.upload(faceImage, {
-          folder: 'salafi_users',
+        const uploaded = await cloudinary.uploader.upload_stream(
+          { folder: 'salafi_users' },
+          (error, result) => {
+            if (error) throw error;
+            faceImageUrl = result.secure_url;
+          }
+        );
+
+        // Push the buffer to the stream
+        uploaded.end(faceFile.buffer);
+        
+        // Wait until upload finishes
+        await new Promise((resolve, reject) => {
+          uploaded.on('finish', resolve);
+          uploaded.on('error', reject);
         });
-        faceImageUrl = uploaded.secure_url;
+
       } catch (err) {
         console.error('Cloudinary upload error:', err);
-        return res.status(500).json({ error: 'Image upload failed' });
+        return res.status(500).json({ error: 'Face image upload failed' });
       }
     }
 
@@ -93,6 +109,7 @@ const registerUser = async (req, res) => {
       status: newUser.status,
       tempPasswordIssued: !password,
     });
+
   } catch (error) {
     console.error('Register Error:', error);
     res.status(500).json({ error: 'Server error' });
